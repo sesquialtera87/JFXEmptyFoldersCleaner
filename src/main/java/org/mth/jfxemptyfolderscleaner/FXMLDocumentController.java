@@ -10,6 +10,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javafx.animation.AnimationTimer;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.LongProperty;
@@ -18,7 +19,6 @@ import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
-import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -29,10 +29,11 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.DirectoryChooser;
 
 /**
- *
  * @author Mattia Marelli
  */
 public class FXMLDocumentController implements Initializable {
+
+    private static final Logger log = Logger.getLogger(FXMLDocumentController.class.getName());
 
     @FXML
     private TextField folderField;
@@ -50,7 +51,8 @@ public class FXMLDocumentController implements Initializable {
     private Button browseButton;
     @FXML
     private StackPane stackPane;
-    private Task currentTask;
+
+    private Task<Void> currentTask;
     private final Queue<String> q = new ConcurrentLinkedQueue<>();
     private final BlockingQueue<String> messages = new ArrayBlockingQueue<>(1);
     private final LongProperty lastUpdate = new SimpleLongProperty();
@@ -68,27 +70,25 @@ public class FXMLDocumentController implements Initializable {
     private final DirectoryChooser dirChooser = new DirectoryChooser();
 
     /**
-     * Visualizza la finestra di dialogo per la scelta della cartella e
-     * visualizza il percorso della cartella selezionata nel TextField
+     * Show the dialog for the choice of the root folder, from which we start the scan
      */
-    public void BrowseAction() {
+    public void browseAction() {
         dirChooser.setInitialDirectory(new File(folderField.getText()));
-        File file = dirChooser.showDialog(null);
+        File file = dirChooser.showDialog(EmptyFoldersCleanerFX.mainStage);
 
-        if (file != null) {
+        if (file != null)
             folderField.setText(file.getPath());
-        }
     }
 
-    public final void CancelTaskAction() {
+    public final void cancelTaskAction() {
+        log.info("Cancelling running task...");
         currentTask.cancel();
-        currentTask = null;
     }
 
-    public void DeleteEmptyFoldersAction() throws IOException {
-        int choiche = DialogController.showConfirmDialog();
+    public void deleteEmptyFoldersAction() {
+        int choice = DialogController.showConfirmDialog();
 
-        if (choiche == DialogController.CANCEL_OPTION) {
+        if (choice == DialogController.CANCEL_OPTION) {
             return;
         }
 
@@ -115,26 +115,26 @@ public class FXMLDocumentController implements Initializable {
         t.start();
     }
 
-    public void FindEmptyFoldersAction() throws IOException {
-        console.clear(); // resetta l'area di testo
+    public void scanAction() {
+        console.clear();
 
 //        timer.start();
         ScanEmptyFoldersTask task = new ScanEmptyFoldersTask(folderField.getText());
-        task.setOnSucceeded((Event event) -> {
+        task.setOnSucceeded(evt -> {
             if (q.isEmpty()) {
                 taskRunning.set(false);
             } else {
                 waitingForMessageQueue = true;
             }
         });
-        task.setOnCancelled((Event event) -> {
+        task.setOnCancelled(evt -> {
             if (q.isEmpty()) {
                 taskRunning.set(false);
             } else {
                 waitingForMessageQueue = true;
             }
         });
-        task.setOnFailed((Event event) -> {
+        task.setOnFailed(evt -> {
             if (q.isEmpty()) {
                 taskRunning.set(false);
             } else {
@@ -147,7 +147,7 @@ public class FXMLDocumentController implements Initializable {
         taskRunning.set(true);
 
         Thread t = new Thread(task);
-        t.setDaemon(true);
+        t.setDaemon(false);
         t.start();
     }
 
@@ -185,9 +185,7 @@ public class FXMLDocumentController implements Initializable {
                         //                    String message = q.poll();
                         String message = TextLogger.getMessageQueue().take();
 
-                        if (message != null) {
-                            console.appendText(message + "\n");
-                        }
+                        console.appendText(message + "\n");
 
                         if (waitingForMessageQueue && q.isEmpty()) {
                             taskRunning.set(false);
@@ -195,7 +193,7 @@ public class FXMLDocumentController implements Initializable {
 
                         lastUpdate.set(now);
                     } catch (InterruptedException ex) {
-                        Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+                        log.log(Level.SEVERE, null, ex);
                     }
                 }
             }

@@ -2,35 +2,40 @@ package org.mth.jfxemptyfolderscleaner;
 
 import java.io.File;
 import java.io.IOException;
+
 import static java.lang.String.format;
+
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Date;
+import java.util.logging.Logger;
+
 import javafx.concurrent.Task;
 
 /**
- *
  * @author Mattia Marelli
  * @since 5-ott-2014
  */
-public class ScanEmptyFoldersTask extends Task implements FileVisitor<Path> {
+public class ScanEmptyFoldersTask extends Task<Void> implements FileVisitor<Path> {
+
+    private Logger log = Logger.getLogger(ScanEmptyFoldersTask.class.getSimpleName());
 
     /**
      * Percorso root da cui partire per la scansione del file-tree
      */
     private final Path rootPath;
     /**
-     * Numero di cartelle vuote trovate durante la scansione
+     * Give the number of empty folders already found
      */
     private int emptyFoldersCount = 0;
     /**
-     * Numero di cartelle visionate
+     * Number of the scanned folders
      */
     private int scannedFoldersCount = 0;
     /**
-     * Instante in cui è iniziata la task
+     * Timestamp of task's start
      */
-    private long initialTime;
+    private long timestamp;
 //    private final Queue<BranchLevel> branch;
 //    private int maxDepth = 0;
 
@@ -45,11 +50,11 @@ public class ScanEmptyFoldersTask extends Task implements FileVisitor<Path> {
     }
 
     @Override
-    protected final Object call() throws Exception {
-        System.err.println("start!");
-        initialTime = System.currentTimeMillis(); // tiene traccia dell'inizio del processo ...
+    protected final Void call() throws Exception {
+        log.info("start!");
+        timestamp = System.currentTimeMillis();
 
-        publishMessage(format("Process started at %s", new Date(initialTime)));
+        publishMessage(format("Process started at %s", new Date(timestamp)));
         publishMessage("Scanning subtree for empty folders ...");
 
         Files.walkFileTree(rootPath, this);
@@ -61,7 +66,7 @@ public class ScanEmptyFoldersTask extends Task implements FileVisitor<Path> {
 
     @Override
     protected void succeeded() {
-        long time = System.currentTimeMillis() - initialTime; // total time elapsed ...
+        long time = System.currentTimeMillis() - timestamp; // total time elapsed ...
         time /= 1000; // ... in seconds!
 
         publishMessage(format("Visited %d folders", scannedFoldersCount));
@@ -69,7 +74,7 @@ public class ScanEmptyFoldersTask extends Task implements FileVisitor<Path> {
     }
 
     @Override
-    public final FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+    public final FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
         if (isCancelled()) {
             return FileVisitResult.TERMINATE;
         } else {
@@ -79,7 +84,7 @@ public class ScanEmptyFoldersTask extends Task implements FileVisitor<Path> {
     }
 
     @Override
-    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
         if (isCancelled()) {
             return FileVisitResult.TERMINATE;
         } else {
@@ -88,18 +93,18 @@ public class ScanEmptyFoldersTask extends Task implements FileVisitor<Path> {
     }
 
     @Override
-    public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+    public FileVisitResult visitFileFailed(Path file, IOException exc) {
         if (isCancelled()) {
             return FileVisitResult.TERMINATE;
         } else {
-            System.err.println("failed visiting " + file);
+            log.warning("failed visiting " + file);
             publishMessage(TextLogger.BLANK_MESSAGE);
             return FileVisitResult.CONTINUE;
         }
     }
 
     @Override
-    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+    public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
         if (isCancelled()) {
             return FileVisitResult.TERMINATE;
         } else {
@@ -110,7 +115,7 @@ public class ScanEmptyFoldersTask extends Task implements FileVisitor<Path> {
             int n = file.list().length;
 
             if (n == 0) {
-                System.out.println(dir.toString());
+                System.out.println(dir);
                 if (file.isHidden()) {
                     publishMessage(format("\tEmpty folder (hidden) -> %s", dir));
                 } else {

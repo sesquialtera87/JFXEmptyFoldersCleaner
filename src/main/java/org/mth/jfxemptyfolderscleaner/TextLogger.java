@@ -16,6 +16,7 @@ public class TextLogger {
 
     public static final String FINISH_MESSAGE = "§";
     public static final String BLANK_MESSAGE = "#";
+
     private static final int QUEUE_CAPACITY = 1;
     private static boolean timerRunning = false;
     private static final BlockingQueue<String> messageQueue = new ArrayBlockingQueue<>(QUEUE_CAPACITY);

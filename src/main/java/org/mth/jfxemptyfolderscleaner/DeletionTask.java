@@ -9,30 +9,29 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Date;
 import java.util.Queue;
+
 import javafx.concurrent.Task;
 
 /**
- *
  * @author Mattia Marelli
  * @since 5-ott-2014
  */
-public class DeletionTask extends Task<Object> implements FileVisitor<Path> {
+public class DeletionTask extends Task<Void> implements FileVisitor<Path> {
 
     /**
      * Numero di cartelle eliminate
      */
     private int deletedFoldersCounter = 0;
     /**
-     * Percorso del filesystem in cui cercare le cartele vuote
+     * Percorso del filesystem in cui cercare le cartelle vuote
      */
     private final Path rootPath;
     private long startTime;
     private Queue<String> messageQueue;
 
     /**
-     *
      * @param rootPath Stringa che indica il percorso da cui partire per la
-     * ricerca di cartelle vuote
+     *                 ricerca di cartelle vuote
      */
     public DeletionTask(String rootPath) {
         this.rootPath = Paths.get(rootPath);
@@ -47,7 +46,7 @@ public class DeletionTask extends Task<Object> implements FileVisitor<Path> {
     }
 
     @Override
-    protected Object call() throws Exception {
+    protected Void call() throws Exception {
         startTime = System.currentTimeMillis();
 
         publishMessage(String.format("Process started at %s", new Date(startTime)));
@@ -55,7 +54,8 @@ public class DeletionTask extends Task<Object> implements FileVisitor<Path> {
 
         Files.walkFileTree(rootPath, this);
 
-        return deletedFoldersCounter;
+//        return deletedFoldersCounter;
+        return null;
     }
 
     @Override
