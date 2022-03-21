@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane id="BorderPane" prefHeight="392.0" prefWidth="669.0" stylesheets="@Style.css"
+            xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.mth.jfxemptyfolderscleaner.FXMLDocumentController">
+    <top>
+        <HBox alignment="CENTER" maxWidth="1.7976931348623157E308" prefHeight="48.0" prefWidth="659.0" spacing="10.0"
+              BorderPane.alignment="CENTER">
+            <children>
+                <Label text="Root folder">
+                    <HBox.margin>
+                        <Insets left="10.0"/>
+                    </HBox.margin>
+                </Label>
+                <TextField fx:id="folderField" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
+                <Button fx:id="browseButton" minWidth="70.0" mnemonicParsing="false" onAction="#BrowseAction"
+                        text="Browse"/>
+            </children>
+            <BorderPane.margin>
+                <Insets bottom="10.0" right="10.0" top="10.0"/>
+            </BorderPane.margin>
+        </HBox>
+    </top>
+    <bottom>
+        <HBox alignment="CENTER" prefHeight="49.0" prefWidth="669.0" spacing="10.0" BorderPane.alignment="CENTER">
+            <children>
+                <Button fx:id="scanButton" mnemonicParsing="false" onAction="#FindEmptyFoldersAction"
+                        text="Find empty folders"/>
+                <Button fx:id="deleteButton" mnemonicParsing="false" onAction="#DeleteEmptyFoldersAction"
+                        text="Delete empty folders"/>
+                <Button fx:id="cancelButton" minWidth="65.0" mnemonicParsing="false" onAction="#CancelTaskAction"
+                        text="Cancel"/>
+            </children>
+        </HBox>
+    </bottom>
+    <center>
+        <StackPane fx:id="stackPane" prefHeight="150.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+            <children>
+                <TextArea fx:id="console" prefHeight="145.0" prefWidth="669.0"/>
+                <ProgressIndicator fx:id="busyIndicator" opacity="0.56" prefHeight="161.0" prefWidth="669.0"
+                                   scaleX="0.5" scaleY="0.5" visible="false"/>
+            </children>
+        </StackPane>
+    </center>
+</BorderPane>
